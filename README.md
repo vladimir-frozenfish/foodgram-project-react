@@ -1,1 +1,10 @@
-# praktikum_new_diplom
+# FOODGRAMM
+
+
+### Приложения бэкенда:
+- recipes - описание моделей
+
+### Модели:
+- User(AbstractUser)
+- Tag
+- Ingredient
