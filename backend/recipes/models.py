@@ -30,6 +30,20 @@ class Tag(models.Model):
     class Meta:
         verbose_name_plural = "Тэги"
         verbose_name = "Тэг"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Ingredient(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Ингредиент")
+    measurement_unit = models.CharField(max_length=200, verbose_name="Единица измерения")
+
+    class Meta:
+        verbose_name_plural = "Ингредиенты"
+        verbose_name = "Ингредиент"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
