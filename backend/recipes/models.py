@@ -18,3 +18,18 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Тэг")
+    color = models.CharField(max_length=7, verbose_name="Цвет", blank=True, null=True)
+    slug = models.SlugField(
+        max_length=200, unique=True, verbose_name="URL_tag"
+    )
+
+    class Meta:
+        verbose_name_plural = "Тэги"
+        verbose_name = "Тэг"
+
+    def __str__(self):
+        return self.name
