@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .validators import validate_cooking_time
+from .validators import validate_cooking_time, validate_color_tag
 
 
 class User(AbstractUser):
@@ -23,8 +23,8 @@ class User(AbstractUser):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=200, verbose_name="Тэг")
-    color = models.CharField(max_length=7, verbose_name="Цвет", blank=True, null=True)
+    name = models.CharField(max_length=200, verbose_name="Тэг", unique=True)
+    color = models.CharField(validators=[validate_color_tag], max_length=7, verbose_name="Цвет", blank=True, null=True)
     slug = models.SlugField(
         max_length=200, unique=True, verbose_name="URL_tag"
     )
@@ -67,6 +67,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name_plural = "Рецепты"
         verbose_name = "Рецепт"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -75,6 +76,11 @@ class Recipe(models.Model):
 class TagRecipe(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Тэги в рецептах"
+        verbose_name = "Тэг в рецепте"
+        ordering = ["recipe"]
 
     def __str__(self):
         return f"{self.tag} {self.recipe}"
