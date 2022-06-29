@@ -105,3 +105,31 @@ class IngredientRecipe(models.Model):
 
     def __str__(self):
         return f"{self.ingredient} {self.amount} {self.recipe}"
+
+
+class Subscribe(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower", verbose_name="Подписчик")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following", verbose_name="Автор на которого подписывается")
+
+    class Meta:
+        verbose_name_plural = "Подписки"
+        verbose_name = "Подписка"
+        ordering = ["user"]
+
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "following"],
+                name="unique_user_following"
+            )
+        ]
+
+
+'''
+class FavoriteRecipe(models.Model):
+    pass
+
+
+class ShoppingCartRecipe(models.Model):
+    pass
+'''
