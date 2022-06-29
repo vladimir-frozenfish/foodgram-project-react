@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .validators import validate_cooking_time, validate_color_tag
+from .validators import validate_above_zero, validate_cooking_time, validate_color_tag
 
 
 class User(AbstractUser):
@@ -57,12 +57,19 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(validators=[validate_cooking_time], verbose_name="Время приготовления")
     image = models.URLField(blank=True, null=True)
     tag = models.ManyToManyField(Tag, through="TagRecipe")
+    ingredient = models.ManyToManyField(Ingredient, through="IngredientRecipe")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes", verbose_name="Автор рецепта")
 
     def get_tag(self):
         return ", ".join([tag.name for tag in self.tag.all()])
 
     get_tag.short_description = "Тэги рецепта"
+
+    def get_ingredient(self):
+        ingredients = IngredientRecipe.objects.filter(recipe=self.id)
+        return ", ".join([f"{i.ingredient} {i.amount} {i.ingredient.measurement_unit}" for i in ingredients])
+
+    get_ingredient.short_description = "Ингредиенты рецепта"
 
     class Meta:
         verbose_name_plural = "Рецепты"
@@ -78,9 +85,23 @@ class TagRecipe(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name_plural = "Тэги в рецептах"
+        verbose_name_plural = "Тэги в рецепте"
         verbose_name = "Тэг в рецепте"
         ordering = ["recipe"]
 
     def __str__(self):
         return f"{self.tag} {self.recipe}"
+
+
+class IngredientRecipe(models.Model):
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    amount = models.PositiveSmallIntegerField(validators=[validate_above_zero], verbose_name="Количество")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Ингредиенты в рецепте"
+        verbose_name = "Ингредиент в рецепте"
+        ordering = ["recipe"]
+
+    def __str__(self):
+        return f"{self.ingredient} {self.amount} {self.recipe}"

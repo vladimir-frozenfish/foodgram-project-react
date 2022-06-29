@@ -11,3 +11,8 @@ def validate_color_tag(value):
 def validate_cooking_time(value):
     if value < 1:
         raise ValidationError("Время приготовления не может быть меньше 1 мин.")
+
+
+def validate_above_zero(value):
+    if value < 1:
+        raise ValidationError("Количество не может быть меньше единицы")
