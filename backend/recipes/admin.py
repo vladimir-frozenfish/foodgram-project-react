@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ingredient, IngredientRecipe, Recipe, Subscribe, Tag, TagRecipe, User
+from .models import Ingredient, IngredientRecipe, FavoriteRecipe, Recipe, ShoppingCartRecipe, Subscribe, Tag, TagRecipe, User
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -9,6 +9,9 @@ class UserAdmin(admin.ModelAdmin):
         "email",
         "first_name",
         "last_name",
+        "get_subscription",
+        "get_favorite_recipe",
+        "get_shopping_cart_recipe"
     )
     search_fields = ("username",)
     list_filter = ("username", "email")
@@ -42,6 +45,14 @@ class SubscribeAdmin(admin.ModelAdmin):
     list_display = ("user", "following")
 
 
+class FavoriteRecipeAdmin(admin.ModelAdmin):
+    list_display = ("user", "recipe")
+
+
+class ShoppingCartRecipeAdmin(admin.ModelAdmin):
+    list_display = ("user", "recipe")
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
@@ -49,3 +60,5 @@ admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(TagRecipe, TagRecipeAdmin)
 admin.site.register(IngredientRecipe, IngredientRecipeAdmin)
 admin.site.register(Subscribe, SubscribeAdmin)
+admin.site.register(FavoriteRecipe, FavoriteRecipeAdmin)
+admin.site.register(ShoppingCartRecipe, ShoppingCartRecipeAdmin)

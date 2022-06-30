@@ -12,6 +12,26 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=150,
                                  blank=True, null=True)
     email = models.EmailField(max_length=254, unique=True)
+    subscription = models.ManyToManyField("self", through="Subscribe")
+    favorite_recipe = models.ManyToManyField("Recipe", through="FavoriteRecipe")
+    # shopping_cart_recipe = models.ManyToManyField("Recipe", through="ShoppingCartRecipe")
+
+    def get_subscription(self):
+        return ", ".join([follower.following.username for follower in self.follower.all()])
+
+    get_subscription.short_description = "Подписки на пользователей"
+
+    def get_favorite_recipe(self):
+        favorite = FavoriteRecipe.objects.filter(user=self.id)
+        return ", ".join([i.recipe.name for i in favorite])
+
+    get_favorite_recipe.short_description = "Избранные рецепты"
+
+    def get_shopping_cart_recipe(self):
+        shopping_cart = ShoppingCartRecipe.objects.filter(user=self.id)
+        return ", ".join([i.recipe.name for i in shopping_cart])
+
+    get_shopping_cart_recipe.short_description = "Рецепты в корзине"
 
     class Meta:
         verbose_name_plural = "Пользователи"
@@ -116,7 +136,6 @@ class Subscribe(models.Model):
         verbose_name = "Подписка"
         ordering = ["user"]
 
-
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "following"],
@@ -124,12 +143,45 @@ class Subscribe(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f"{self.user.username} -> {self.following.username}"
 
-'''
+
 class FavoriteRecipe(models.Model):
-    pass
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Избранные рецепты"
+        verbose_name = "Избранный рецепт"
+        ordering = ["user"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"],
+                name="unique_user_favorite_recipe"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} {self.recipe}"
 
 
 class ShoppingCartRecipe(models.Model):
-    pass
-'''
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Рецепты в корзине"
+        verbose_name = "Рецепт в корзине"
+        ordering = ["user"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"],
+                name="unique_user_shopping_cart_recipe"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} {self.recipe}"
