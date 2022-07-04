@@ -1,11 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .validators import validate_above_zero, validate_cooking_time, validate_color_tag
+from .validators import validate_above_zero, validate_cooking_time, validate_color_tag, validate_username
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150,
+    username = models.CharField(validators=[validate_username],
+                                max_length=150,
                                 unique=True)
     first_name = models.CharField(max_length=150,
                                   blank=True, null=True)

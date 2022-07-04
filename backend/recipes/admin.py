@@ -1,9 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from .models import Ingredient, IngredientRecipe, FavoriteRecipe, Recipe, ShoppingCartRecipe, Subscribe, Tag, TagRecipe, User
 
 
-class UserAdmin(admin.ModelAdmin):
+class CustomUserModel(UserAdmin):
     list_display = (
         "username",
         "email",
@@ -53,7 +54,7 @@ class ShoppingCartRecipeAdmin(admin.ModelAdmin):
     list_display = ("user", "recipe")
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserModel)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
