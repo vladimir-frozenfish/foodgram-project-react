@@ -73,7 +73,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    name = models.CharField(max_length=200, verbose_name="Имя рецепта")
+    name = models.CharField(max_length=200, verbose_name="Имя рецепта", unique=True)
     text = models.TextField()
     cooking_time = models.PositiveSmallIntegerField(validators=[validate_cooking_time], verbose_name="Время приготовления")
     image = models.URLField(blank=True, null=True)
@@ -110,6 +110,13 @@ class TagRecipe(models.Model):
         verbose_name = "Тэг в рецепте"
         ordering = ["recipe"]
 
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tag", "recipe"],
+                name="unique_tag_recipe"
+            )
+        ]
+
     def __str__(self):
         return f"{self.tag} {self.recipe}"
 
@@ -123,6 +130,13 @@ class IngredientRecipe(models.Model):
         verbose_name_plural = "Ингредиенты в рецепте"
         verbose_name = "Ингредиент в рецепте"
         ordering = ["recipe"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ingredient", "recipe"],
+                name="unique_ingredient_recipe"
+            )
+        ]
 
     def __str__(self):
         return f"{self.ingredient} {self.amount} {self.recipe}"
