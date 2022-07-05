@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 
-from recipes.models import User
+from recipes.models import User, Tag
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,3 +33,10 @@ class UserSerializer(serializers.ModelSerializer):
         """создание хэшируемого пароля"""
         validated_data['password'] = make_password(validated_data['password'])
         return super(UserSerializer, self).create(validated_data)
+
+
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Tag
