@@ -6,6 +6,8 @@ from django.core import exceptions as django_exceptions
 
 from djoser.conf import settings
 
+from drf_extra_fields.fields import Base64ImageField
+
 from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe
 
 
@@ -162,6 +164,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, source='tag', required=False)
     ingredients = IngredientJSONField(required=False, source='ingredient')
+    image = Base64ImageField(required=False)
 
     class Meta:
         fields = (
