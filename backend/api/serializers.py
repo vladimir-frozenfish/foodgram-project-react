@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
@@ -87,7 +88,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    tags = TagSerializer(many=True, source='tag')
+    tags = TagSerializer(many=True, source='tag', required=False)
     ingredients = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -140,21 +141,34 @@ class RecipeSerializer(serializers.ModelSerializer):
         return obj.name in recipes_in_shopping_cart
 
 
+class IngredientJSONField(serializers.Field):
+    def to_representation(self, value):
+        return {"Ингредиенты": "Пусто!"}
+
+    def to_internal_value(self, data):
+        # print(f'{data=}')
+
+        '''try:
+            # Если имя цвета существует, то конвертируем код в название
+            data = webcolors.hex_to_name(data)
+        except ValueError:
+            # Иначе возвращаем ошибку
+            raise serializers.ValidationError('Для этого цвета нет имени')
+        # Возвращаем данные в новом формате'''
+        return data
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, source='tag', required=False)
-    # ingredients = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all(), many=True, source='ingredient', required=False)
-    # ingredients = serializers.ListField(many=True, source='ingredient', required=False)
-    # ingredients = serializers.SerializerMethodField()
-    # is_favorite = serializers.SerializerMethodField()
-    # is_in_shopping_cart = serializers.SerializerMethodField()
+    ingredients = IngredientJSONField(required=False, source='ingredient')
 
     class Meta:
         fields = (
             "id",
             "tags",
             "author",
-            # "ingredients",
+            "ingredients",
             # "is_favorite",
             # "is_in_shopping_cart",
             "name",
@@ -164,20 +178,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         model = Recipe
 
-
     def create(self, validated_data):
-        # if 'tags' not in self.initial_data:
-        #     recipe = Recipe.objects.create(**validated_data)
-        #     return recipe
-        #
-        # tags = validated_data.pop('tag')
-        # recipe = Recipe.objects.create(**validated_data)
-        #
-        # for tag in tags:
-        #     TagRecipe.objects.create(tag=tag, recipe=recipe)
-        #
-        # return recipe
-
         try:
             tags = validated_data.pop('tag')
         except:
@@ -193,8 +194,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for tag in tags:
             TagRecipe.objects.create(tag=tag, recipe=recipe)
 
-        print(ingredients)
-        # for ingredient in ingredients:
-        #     print(ingredient)
+        for ingredient in ingredients:
+            ingredient_object = get_object_or_404(Ingredient, id=ingredient['id'])
+            IngredientRecipe.objects.create(recipe=recipe, ingredient=ingredient_object, amount=ingredient['amount'])
 
         return recipe

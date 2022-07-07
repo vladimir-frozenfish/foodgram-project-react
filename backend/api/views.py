@@ -60,7 +60,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    # serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
@@ -69,4 +68,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeCreateSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        return serializer.save(author=self.request.user)
