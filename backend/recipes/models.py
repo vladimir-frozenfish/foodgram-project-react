@@ -76,7 +76,7 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200, verbose_name="Имя рецепта", unique=True)
     text = models.TextField()
     cooking_time = models.PositiveSmallIntegerField(validators=[validate_cooking_time], verbose_name="Время приготовления")
-    image = models.URLField(blank=True, null=True)
+    image = models.ImageField(upload_to='recipes/', blank=True, null=True, verbose_name='Изображение' )
     tag = models.ManyToManyField(Tag, through="TagRecipe")
     ingredient = models.ManyToManyField(Ingredient, through="IngredientRecipe")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes", verbose_name="Автор рецепта")
