@@ -1,7 +1,9 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from rest_framework.relations import SlugRelatedField
+from django.contrib.auth.password_validation import validate_password
+from django.core import exceptions as django_exceptions
+
+from djoser.conf import settings
 
 from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe
 
@@ -35,6 +37,38 @@ class UserSerializer(serializers.ModelSerializer):
         """создание хэшируемого пароля"""
         validated_data['password'] = make_password(validated_data['password'])
         return super(UserSerializer, self).create(validated_data)
+
+
+class PasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(style={"input_type": "password"})
+
+    def validate(self, attrs):
+        user = self.initial_data["current_user"] or self.user
+        assert user is not None
+
+        try:
+            validate_password(attrs["new_password"], user)
+        except django_exceptions.ValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)})
+        return super().validate(attrs)
+
+
+class CurrentPasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(style={"input_type": "password"})
+
+    default_error_messages = {
+        "invalid_password": settings.CONSTANTS.messages.INVALID_PASSWORD_ERROR
+    }
+
+    def validate_current_password(self, value):
+        is_password_valid = self.initial_data["current_user"].check_password(value)
+        if is_password_valid:
+            return value
+        else:
+            self.fail("invalid_password")
+
+class SetPasswordSerializer(PasswordSerializer, CurrentPasswordSerializer):
+    pass
 
 
 class TagSerializer(serializers.ModelSerializer):
