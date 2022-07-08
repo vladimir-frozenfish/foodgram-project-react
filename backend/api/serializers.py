@@ -8,7 +8,8 @@ from djoser.conf import settings
 
 from drf_extra_fields.fields import Base64ImageField
 
-from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe
+from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe, Subscribe
+from rest_framework.validators import UniqueTogetherValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -217,6 +218,7 @@ class RecipeSubscribeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionUserSerializer(serializers.ModelSerializer):
+    """сериализатор для вывода юзеров на которых подписан текущий пользователь"""
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     recipes = RecipeSubscribeSerializer(many=True)
@@ -239,4 +241,32 @@ class SubscriptionUserSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    following = UserSerializer(read_only=True)
+
+    class Meta:
+        fields = ("user", "following")
+        model = Subscribe
+
+    def validate(self, data):
+        user = self.context["request"].user
+        follow_id = self.context["view"].kwargs.get(["user_id"][0])
+        follow = get_object_or_404(User, id=follow_id)
+
+        if (self.context["request"].method == "POST"
+                 and Subscribe.objects.filter(user=user, following=follow).exists()):
+             raise serializers.ValidationError(
+                 {"message": "Вы уже подписаны на этого пользователя"}
+             )
+
+        if self.context["request"].method == "POST" and user == follow:
+             raise serializers.ValidationError(
+                 {"message": "На самого себя нельзя подписаться"}
+             )
+        return data
+
+
 

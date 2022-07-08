@@ -1,6 +1,7 @@
 from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, viewsets, permissions, status
+from rest_framework import generics, viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -9,8 +10,13 @@ from djoser.compat import get_user_email
 from djoser.conf import settings
 
 from recipes.models import Ingredient, User, Recipe, Tag, Subscribe
-from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscriptionUserSerializer
+from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
+
+
+class CreateDeleteViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """Вьюсет для создания и удаления"""
+    pass
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -89,3 +95,28 @@ class SubscriptionUserListViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         new_queryset = self.request.user.follower
         return new_queryset
+
+
+class SubscribeViewSet(CreateDeleteViewSet):
+    serializer_class = SubscribeSerializer
+
+    def perform_create(self, serializer):
+        follow_id = self.kwargs.get("user_id")
+        follow = get_object_or_404(User, id=follow_id)
+
+        serializer.save(user=self.request.user, following=follow)
+
+    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def delete(self, request, *args, **kwargs):
+        follow_id = self.kwargs.get("user_id")
+        follow = get_object_or_404(User, id=follow_id)
+
+        queryset = Subscribe.objects.filter(user=self.request.user, following=follow)
+        if not queryset:
+            return Response({"message": "Ошибка отписки, возможно вы на этого автора и небыли подписаны"}, status=status.HTTP_400_BAD_REQUEST)
+        queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+

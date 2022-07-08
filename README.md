@@ -22,9 +22,11 @@
 - api/users/{id} - GET, PATCH, DELETE
 - api/auth/token/login/ - POST - полуение токена
 - api/auth/token/logout/ - POST - удаление токена
-- api/auth/users/me/ - GET <span style="color:green">(надо из пути убрать path)</span>
-- api/auth/users/set_password/ - POST <span style="color:green">(надо из пути убрать path)</span>
-- api/auth/users/subscriptions/ - GET - список подписанных юзеров
+- api/users/me/ - GET
+- api/auth/set_password/ - POST
+#### Subscribe
+- api/auth/users/subscriptions/ - GET - список подписок на юзеров
+- api/users/{id}/subscribe/ - GET, DELETE - подписка и удаление юзера из пидписок
 #### Tags:
 - api/tags/ - GET
 - api/tags/{id} - GET
@@ -32,7 +34,8 @@
 - api/ingredients/ - GET
 - api/ingredients/{id} - GET
 #### Recipes:
-- api/recipes/ - GET, POST <span style="color:green">(при создании рецепта надо добавить ингредиенты и сохранение изображения и выдачу на него ссылки)</span>
+- api/recipes/ - GET, POST
 - api/recipes/{id} - GET, PATCH, DELETE
+  
 
 

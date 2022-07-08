@@ -6,6 +6,7 @@ from .models import Ingredient, IngredientRecipe, FavoriteRecipe, Recipe, Shoppi
 
 class CustomUserModel(UserAdmin):
     list_display = (
+        "id",
         "username",
         "email",
         "first_name",

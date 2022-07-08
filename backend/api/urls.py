@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import IngredientViewSet, UserViewSet, RecipeViewSet, TagViewSet, SubscriptionUserListViewSet
+from .views import IngredientViewSet, UserViewSet, RecipeViewSet, TagViewSet, SubscribeViewSet
 
 
 app_name = "api"
@@ -9,6 +9,7 @@ app_name = "api"
 router = routers.DefaultRouter()
 
 router.register("users", UserViewSet, basename="users")
+router.register(r"users/(?P<user_id>\d+)/subscribe", SubscribeViewSet, basename="subscribe")
 router.register("tags", TagViewSet, basename="tags")
 router.register("ingredients", IngredientViewSet, basename="ingredients")
 router.register("recipes", RecipeViewSet, basename="recipes")
