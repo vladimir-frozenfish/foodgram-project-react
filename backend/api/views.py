@@ -9,8 +9,8 @@ from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
-from recipes.models import Ingredient, User, Recipe, Tag, Subscribe
-from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer
+from recipes.models import Ingredient, FavoriteRecipe, User, Recipe, Tag, Subscribe
+from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 
 
@@ -89,21 +89,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return serializer.save(author=self.request.user)
 
 
-class SubscriptionUserListViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = SubscriptionUserSerializer
-
-    def get_queryset(self):
-        new_queryset = self.request.user.follower
-        return new_queryset
-
-
 class SubscribeViewSet(CreateDeleteViewSet):
     serializer_class = SubscribeSerializer
 
     def perform_create(self, serializer):
         follow_id = self.kwargs.get("user_id")
         follow = get_object_or_404(User, id=follow_id)
-
         serializer.save(user=self.request.user, following=follow)
 
     @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
@@ -116,6 +107,27 @@ class SubscribeViewSet(CreateDeleteViewSet):
             return Response({"message": "Ошибка отписки, возможно вы на этого автора и небыли подписаны"}, status=status.HTTP_400_BAD_REQUEST)
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecipeFavoriteViewSet(CreateDeleteViewSet):
+    serializer_class = RecipeFavoriteSerializer
+
+    def perform_create(self, serializer):
+        recipe_id = self.kwargs.get("recipe_id")
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        serializer.save(user=self.request.user, recipe=recipe)
+
+    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def delete(self, request, *args, **kwargs):
+        recipe_id = self.kwargs.get("recipe_id")
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        queryset = FavoriteRecipe.objects.filter(user=self.request.user, recipe=recipe)
+        if not queryset:
+            return Response({"message": "Ошибка удаления рецепта из избранного, возможно рецепта и не было в избранном"}, status=status.HTTP_400_BAD_REQUEST)
+        queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 

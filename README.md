@@ -26,16 +26,18 @@
 - api/auth/set_password/ - POST
 #### Subscribe
 - api/auth/users/subscriptions/ - GET - список подписок на юзеров
-- api/users/{id}/subscribe/ - GET, DELETE - подписка и удаление юзера из пидписок
+- api/users/{id}/subscribe/ - POST, DELETE - подписка и удаление юзера из пидписок
 #### Tags:
 - api/tags/ - GET
 - api/tags/{id} - GET
-- #### Ingredients:
+#### Ingredients:
 - api/ingredients/ - GET
 - api/ingredients/{id} - GET
 #### Recipes:
 - api/recipes/ - GET, POST
 - api/recipes/{id} - GET, PATCH, DELETE
+#### FavoriteRecipes:
+- api/recipes/{id}/favorite - POST, DELETE - добавление текущим пользователем рецепта в избранное, удаление из избранного
   
 
 
