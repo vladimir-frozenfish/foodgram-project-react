@@ -1,6 +1,6 @@
 from django.contrib.auth import update_session_auth_hash
 
-from rest_framework import viewsets, permissions, status
+from rest_framework import generics, viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -8,8 +8,8 @@ from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
-from recipes.models import Ingredient, User, Recipe, Tag
-from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, TagSerializer, UserSerializer, SetPasswordSerializer
+from recipes.models import Ingredient, User, Recipe, Tag, Subscribe
+from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscriptionUserSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 
 
@@ -22,6 +22,18 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def subscriptions(self, request):
+        subscriptions = Subscribe.objects.filter(user=request.user)
+
+        follower = []
+        for subscribe in subscriptions:
+            follower.append(subscribe.following)
+
+        page = self.paginate_queryset(follower)
+        serializer = SubscriptionUserSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @action(["post"], url_path="set_password", permission_classes=(permissions.IsAuthenticated,), detail=False)
     def set_password(self, request, *args, **kwargs):
@@ -69,3 +81,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
+
+
+class SubscriptionUserListViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = SubscriptionUserSerializer
+
+    def get_queryset(self):
+        new_queryset = self.request.user.follower
+        return new_queryset

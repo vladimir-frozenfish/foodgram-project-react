@@ -202,3 +202,41 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             IngredientRecipe.objects.create(recipe=recipe, ingredient=ingredient_object, amount=ingredient['amount'])
 
         return recipe
+
+
+class RecipeSubscribeSerializer(serializers.ModelSerializer):
+    """сериализатор для вывода рецептов при получении списка подписчиков"""
+    class Meta:
+        fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time"
+        )
+        model = Recipe
+
+
+class SubscriptionUserSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    recipes = RecipeSubscribeSerializer(many=True)
+
+    class Meta:
+        fields = (
+                "email",
+                "id",
+                "username",
+                "first_name",
+                "last_name",
+                "is_subscribed",
+                "recipes",
+                "recipes_count"
+            )
+        model = User
+
+    def get_is_subscribed(self, obj):
+        return True
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.all().count()
+
