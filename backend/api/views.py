@@ -1,4 +1,7 @@
+from collections import defaultdict
+
 from django.contrib.auth import update_session_auth_hash
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, viewsets, permissions, status, mixins
@@ -9,7 +12,7 @@ from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
-from recipes.models import Ingredient, FavoriteRecipe, User, Recipe, Tag, Subscribe
+from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, Tag, Subscribe
 from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 
@@ -87,6 +90,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
+
+    @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def download_shopping_cart(self, request):
+        """функция возвращает при api запросе текстовый файл со списком ингредиентов
+        всех рецептов, которые были в корзине у аутентифицированного юзера"""
+
+        """переменные для формирования текстового файла"""
+        recipes_name = set()
+        ingredient_dict = defaultdict(int)
+
+        user = request.user
+        shopping_cart_recipes = user.shopping_cart_recipe.all()
+        for recipe in shopping_cart_recipes:
+            recipes_name.add(recipe.name)
+            ingredients = IngredientRecipe.objects.filter(recipe=recipe)
+            for ingredient in ingredients:
+                ingredient_dict[f'{ingredient.ingredient.name}, {ingredient.ingredient.measurement_unit}'] += ingredient.amount
+
+        data = (f'Ваши рецепты: {", ".join(list(recipes_name))}\n'
+                f'Необходимые ингредиенты для всех рецептов:\n')
+        for ingredient, amount in ingredient_dict.items():
+            ingredient, measurement_unit = ingredient.split(', ')
+            data += f'- {ingredient}: {amount} {measurement_unit}\n'
+
+        filename = 'cart.txt'
+        cart_text = open(filename, 'w')
+        cart_text.write(data)
+
+        response = HttpResponse(data, content_type='text/plain; charset=UTF-8')
+        response['Content-Disposition'] = 'attachment; filename=' + filename
+        return response
 
 
 class SubscribeViewSet(CreateDeleteViewSet):

@@ -14,8 +14,8 @@ class User(AbstractUser):
                                  blank=True, null=True)
     email = models.EmailField(max_length=254, unique=True)
     subscription = models.ManyToManyField("self", through="Subscribe")
-    favorite_recipe = models.ManyToManyField("Recipe", through="FavoriteRecipe")
-    # shopping_cart_recipe = models.ManyToManyField("Recipe", through="ShoppingCartRecipe")
+    favorite_recipe = models.ManyToManyField("Recipe", through="FavoriteRecipe", related_name="favorite_recipe")
+    shopping_cart_recipe = models.ManyToManyField("Recipe", through="ShoppingCartRecipe", related_name="shopping_cart_recipe")
 
     def get_subscription(self):
         return ", ".join([follower.following.username for follower in self.follower.all()])
