@@ -185,8 +185,3 @@ class RecipeShoppingCartViewSet(CreateDeleteViewSet):
             return Response({"message": "Ошибка удаления рецепта из корзины, возможно рецепта и не было в корзине"}, status=status.HTTP_400_BAD_REQUEST)
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-
-
-

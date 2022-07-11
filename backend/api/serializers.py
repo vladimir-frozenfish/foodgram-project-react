@@ -9,7 +9,6 @@ from djoser.conf import settings
 from drf_extra_fields.fields import Base64ImageField
 
 from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe, Subscribe
-from rest_framework.validators import UniqueTogetherValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -146,6 +145,13 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class IngredientJSONField(serializers.Field):
     def to_representation(self, value):
+        print(value.set('amount'))
+        ingredients = value.all()
+        for ingredient in ingredients:
+            # print(ingredient.id)
+            print(ingredient.name)
+            # print(dir(ingredient))
+
         return {"Ингредиенты": "Пусто!"}
 
     def to_internal_value(self, data):
@@ -162,21 +168,18 @@ class IngredientJSONField(serializers.Field):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    # author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, source='tag', required=False)
     ingredients = IngredientJSONField(required=False, source='ingredient')
     image = Base64ImageField(required=False)
 
     class Meta:
         fields = (
-            "id",
-            "tags",
-            "author",
             "ingredients",
-            # "is_favorite",
-            # "is_in_shopping_cart",
-            "name",
+            "tags",
+            # "author",
             "image",
+            "name",
             "text",
             "cooking_time"
         )
