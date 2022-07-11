@@ -12,8 +12,8 @@ from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
-from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, Tag, Subscribe
-from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer
+from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, Tag, Subscribe, ShoppingCartRecipe
+from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer, RecipeShoppingCartSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 
 
@@ -144,6 +144,8 @@ class SubscribeViewSet(CreateDeleteViewSet):
 
 
 class RecipeFavoriteViewSet(CreateDeleteViewSet):
+    """Вьюсет для добавления и удаления рецепта из избранного
+    для текущего пользователя"""
     serializer_class = RecipeFavoriteSerializer
 
     def perform_create(self, serializer):
@@ -159,6 +161,28 @@ class RecipeFavoriteViewSet(CreateDeleteViewSet):
         queryset = FavoriteRecipe.objects.filter(user=self.request.user, recipe=recipe)
         if not queryset:
             return Response({"message": "Ошибка удаления рецепта из избранного, возможно рецепта и не было в избранном"}, status=status.HTTP_400_BAD_REQUEST)
+        queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecipeShoppingCartViewSet(CreateDeleteViewSet):
+    """Вьюсет для добавления и удаления рецепта из корзины
+    для текущего пользователя"""
+    serializer_class = RecipeShoppingCartSerializer
+
+    def perform_create(self, serializer):
+        recipe_id = self.kwargs.get("recipe_id")
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        serializer.save(user=self.request.user, recipe=recipe)
+
+    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def delete(self, request, *args, **kwargs):
+        recipe_id = self.kwargs.get("recipe_id")
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        queryset = ShoppingCartRecipe.objects.filter(user=self.request.user, recipe=recipe)
+        if not queryset:
+            return Response({"message": "Ошибка удаления рецепта из корзины, возможно рецепта и не было в корзине"}, status=status.HTTP_400_BAD_REQUEST)
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

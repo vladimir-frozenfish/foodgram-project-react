@@ -293,5 +293,27 @@ class RecipeFavoriteSerializer(serializers.ModelSerializer):
         return data
 
 
+class RecipeShoppingCartSerializer(serializers.ModelSerializer):
+    """сериализатор для добавления рецепта в корзину"""
+    user = UserSerializer(read_only=True)
+    recipe = RecipeSerializer(read_only=True)
+
+    class Meta:
+        fields = ("user", "recipe")
+        model = ShoppingCartRecipe
+
+    def validate(self, data):
+        user = self.context["request"].user
+        recipe_id = self.context["view"].kwargs.get(["recipe_id"][0])
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        if (self.context["request"].method == "POST"
+                 and ShoppingCartRecipe.objects.filter(user=user, recipe=recipe).exists()):
+             raise serializers.ValidationError(
+                 {"message": "Вы уже добавили этот рецепт в корзину"}
+             )
+
+        return data
+
 
 

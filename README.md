@@ -40,5 +40,6 @@
 - api/recipes/{id}/favorite - POST, DELETE - добавление текущим пользователем рецепта в избранное, удаление из избранного
 #### Shopping_Cart:
 - api/recipes/download_shopping_cart - GET - получение текстового файла со списком ингредиентов рецептов, добавленных в корзину
+- api/recipes/{id}/shopping_cart - POST, DELETE - добавление текущим пользователем рецепта в корзину, удаление из корзины
 
 
