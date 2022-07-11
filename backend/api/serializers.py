@@ -39,8 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        following = [follower.following.username for follower in request_user.follower.all()]
-        return obj.username in following
+        return Subscribe.objects.filter(user=request_user, following=obj).exists()
 
     def create(self, validated_data):
         """создание хэшируемого пароля"""
