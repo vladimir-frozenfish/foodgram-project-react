@@ -72,8 +72,7 @@ class CurrentPasswordSerializer(serializers.Serializer):
         is_password_valid = self.initial_data["current_user"].check_password(value)
         if is_password_valid:
             return value
-        else:
-            self.fail("invalid_password")
+        self.fail("invalid_password")
 
 
 class SetPasswordSerializer(PasswordSerializer, CurrentPasswordSerializer):
@@ -136,8 +135,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        favorite_recipes = [recipe.recipe.name for recipe in FavoriteRecipe.objects.filter(user=request_user.id)]
-        return obj.name in favorite_recipes
+        return FavoriteRecipe.objects.filter(user=request_user, recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """возвращает в поле is_in_shopping_cart True если текущий пользователь
@@ -145,8 +143,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        recipes_in_shopping_cart = [recipe.recipe.name for recipe in ShoppingCartRecipe.objects.filter(user=request_user.id)]
-        return obj.name in recipes_in_shopping_cart
+        return ShoppingCartRecipe.objects.filter(user=request_user, recipe=obj).exists()
 
 
 class IngredientJSONField(serializers.Field):
@@ -192,14 +189,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
 
         recipe = Recipe.objects.create(**validated_data)
-
-        for tag in tags:
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
-
-        for ingredient in ingredients:
-            ingredient_object = get_object_or_404(Ingredient, id=ingredient['id'])
-            IngredientRecipe.objects.create(recipe=recipe, ingredient=ingredient_object, amount=ingredient['amount'])
-
+        TagRecipe.objects.bulk_create([TagRecipe(tag=tag, recipe=recipe) for tag in tags])
+        IngredientRecipe.objects.bulk_create(
+            [
+                IngredientRecipe(
+                    recipe=recipe,
+                    ingredient=get_object_or_404(Ingredient, id=ingredient['id']),
+                    amount=ingredient['amount']
+                ) for ingredient in ingredients
+            ]
+        )
         return recipe
 
 
@@ -218,7 +217,7 @@ class RecipeSubscribeSerializer(serializers.ModelSerializer):
 class SubscriptionUserSerializer(serializers.ModelSerializer):
     """сериализатор для вывода юзеров на которых подписан текущий пользователь"""
     is_subscribed = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(source='recipes.count')
     recipes = RecipeSubscribeSerializer(many=True)
 
     class Meta:
@@ -236,9 +235,6 @@ class SubscriptionUserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         return True
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.all().count()
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
