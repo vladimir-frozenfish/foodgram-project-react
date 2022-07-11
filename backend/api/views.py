@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from djoser import signals, utils
 from djoser.compat import get_user_email
@@ -15,6 +16,7 @@ from djoser.conf import settings
 from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, Tag, Subscribe, ShoppingCartRecipe
 from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer, RecipeShoppingCartSerializer
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
+from .filters import RecipeFilter
 
 
 class CreateDeleteViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -82,6 +84,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == "GET":
