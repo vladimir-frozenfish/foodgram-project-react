@@ -3,23 +3,39 @@ from collections import defaultdict
 from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-
 from rest_framework import generics, viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-
 from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
-from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, Tag, Subscribe, ShoppingCartRecipe
-from .serializers import IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteSerializer, TagSerializer, UserSerializer, SetPasswordSerializer, SubscribeSerializer, SubscriptionUserSerializer, RecipeShoppingCartSerializer
+from recipes.models import (Ingredient,
+                            IngredientRecipe,
+                            FavoriteRecipe,
+                            User,
+                            Recipe,
+                            Tag,
+                            Subscribe,
+                            ShoppingCartRecipe)
+from .serializers import (IngredientSerializer,
+                          RecipeSerializer,
+                          RecipeCreateSerializer,
+                          RecipeFavoriteSerializer,
+                          RecipeShoppingCartSerializer,
+                          TagSerializer,
+                          UserSerializer,
+                          SetPasswordSerializer,
+                          SubscribeSerializer,
+                          SubscriptionUserSerializer)
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 from .filters import RecipeFilter
 
 
-class CreateDeleteViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CreateDeleteViewSet(mixins.CreateModelMixin,
+                          mixins.DestroyModelMixin,
+                          viewsets.GenericViewSet):
     """Вьюсет для создания и удаления"""
     pass
 

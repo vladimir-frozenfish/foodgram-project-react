@@ -3,12 +3,18 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
-
 from djoser.conf import settings
-
 from drf_extra_fields.fields import Base64ImageField
 
-from recipes.models import Ingredient, IngredientRecipe, FavoriteRecipe, User, Recipe, ShoppingCartRecipe, Tag, TagRecipe, Subscribe
+from recipes.models import (Ingredient,
+                            IngredientRecipe,
+                            FavoriteRecipe,
+                            User,
+                            Recipe,
+                            ShoppingCartRecipe,
+                            Tag,
+                            TagRecipe,
+                            Subscribe)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -69,6 +75,7 @@ class CurrentPasswordSerializer(serializers.Serializer):
             return value
         else:
             self.fail("invalid_password")
+
 
 class SetPasswordSerializer(PasswordSerializer, CurrentPasswordSerializer):
     pass
@@ -145,30 +152,16 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class IngredientJSONField(serializers.Field):
     def to_representation(self, value):
-        print(value.set('amount'))
         ingredients = value.all()
         for ingredient in ingredients:
-            # print(ingredient.id)
-            print(ingredient.name)
-            # print(dir(ingredient))
-
+            pass
         return {"Ингредиенты": "Пусто!"}
 
     def to_internal_value(self, data):
-        # print(f'{data=}')
-
-        '''try:
-            # Если имя цвета существует, то конвертируем код в название
-            data = webcolors.hex_to_name(data)
-        except ValueError:
-            # Иначе возвращаем ошибку
-            raise serializers.ValidationError('Для этого цвета нет имени')
-        # Возвращаем данные в новом формате'''
         return data
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    # author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, source='tag', required=False)
     ingredients = IngredientJSONField(required=False, source='ingredient')
     image = Base64ImageField(required=False)
@@ -177,7 +170,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         fields = (
             "ingredients",
             "tags",
-            # "author",
             "image",
             "name",
             "text",
@@ -189,12 +181,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         try:
             tags = validated_data.pop('tag')
         except:
-            tags = []
+            raise serializers.ValidationError(
+                {"message": "Назначьте тэги для рецепта"}
+            )
 
         try:
             ingredients = validated_data.pop('ingredient')
         except:
-            ingredients = []
+            raise serializers.ValidationError(
+                {"message": "Добавьте ингредиенты для нового рецепта"}
+            )
 
         recipe = Recipe.objects.create(**validated_data)
 
