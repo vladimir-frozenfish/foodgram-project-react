@@ -18,19 +18,17 @@ class User(AbstractUser):
     shopping_cart_recipe = models.ManyToManyField("Recipe", through="ShoppingCartRecipe", related_name="shopping_cart_recipe")
 
     def get_subscription(self):
-        return ", ".join([follower.following.username for follower in self.follower.all()])
+        return ", ".join(self.subscription.all().values_list('username', flat=True))
 
     get_subscription.short_description = "Подписки на пользователей"
 
     def get_favorite_recipe(self):
-        favorite = FavoriteRecipe.objects.filter(user=self.id)
-        return ", ".join([i.recipe.name for i in favorite])
+        return ", ".join(self.favorite_recipe.all().values_list('name', flat=True))
 
     get_favorite_recipe.short_description = "Избранные рецепты"
 
     def get_shopping_cart_recipe(self):
-        shopping_cart = ShoppingCartRecipe.objects.filter(user=self.id)
-        return ", ".join([i.recipe.name for i in shopping_cart])
+        return ", ".join(self.shopping_cart_recipe.all().values_list('name', flat=True))
 
     get_shopping_cart_recipe.short_description = "Рецепты в корзине"
 
@@ -82,13 +80,13 @@ class Recipe(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes", verbose_name="Автор рецепта")
 
     def get_tag(self):
-        return ", ".join([tag.name for tag in self.tag.all()])
+        return ", ".join(self.tag.all().values_list("name", flat=True))
 
     get_tag.short_description = "Тэги рецепта"
 
     def get_ingredient(self):
         ingredients = IngredientRecipe.objects.filter(recipe=self.id)
-        return ", ".join([f"{i.ingredient} {i.amount} {i.ingredient.measurement_unit}" for i in ingredients])
+        return ", ".join((map(str, ingredients)))
 
     get_ingredient.short_description = "Ингредиенты рецепта"
 
@@ -139,12 +137,13 @@ class IngredientRecipe(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.ingredient} {self.amount} {self.recipe}"
+        return f"{self.ingredient} {self.amount} {self.ingredient.measurement_unit}"
 
 
 class Subscribe(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower", verbose_name="Подписчик")
-    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following", verbose_name="Автор на которого подписывается")
+    # following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following", verbose_name="Автор на которого подписывается")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscribe_user", verbose_name="Автор на которого подписывается")
 
     class Meta:
         verbose_name_plural = "Подписки"

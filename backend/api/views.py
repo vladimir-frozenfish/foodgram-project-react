@@ -1,13 +1,11 @@
-from collections import defaultdict
-
 from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, viewsets, permissions, status, mixins
+from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser import signals, utils
+from djoser import utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 
@@ -31,6 +29,7 @@ from .serializers import (IngredientSerializer,
                           SubscriptionUserSerializer)
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
 from .filters import RecipeFilter
+from .utils import shopping_cart_data
 
 
 class CreateDeleteViewSet(mixins.CreateModelMixin,
@@ -52,11 +51,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
     def subscriptions(self, request):
-        subscriptions = Subscribe.objects.filter(user=request.user)
-
-        follower = []
-        for subscribe in subscriptions:
-            follower.append(subscribe.following)
+        follower = self.request.user.subscription.all()
 
         page = self.paginate_queryset(follower)
         serializer = SubscriptionUserSerializer(page, many=True)
@@ -115,24 +110,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """функция возвращает при api запросе текстовый файл со списком ингредиентов
         всех рецептов, которые были в корзине у аутентифицированного юзера"""
-
-        """переменные для формирования текстового файла"""
-        recipes_name = set()
-        ingredient_dict = defaultdict(int)
-
-        user = request.user
-        shopping_cart_recipes = user.shopping_cart_recipe.all()
-        for recipe in shopping_cart_recipes:
-            recipes_name.add(recipe.name)
-            ingredients = IngredientRecipe.objects.filter(recipe=recipe)
-            for ingredient in ingredients:
-                ingredient_dict[f'{ingredient.ingredient.name}, {ingredient.ingredient.measurement_unit}'] += ingredient.amount
-
-        data = (f'Ваши рецепты: {", ".join(list(recipes_name))}\n'
-                f'Необходимые ингредиенты для всех рецептов:\n')
-        for ingredient, amount in ingredient_dict.items():
-            ingredient, measurement_unit = ingredient.split(', ')
-            data += f'- {ingredient}: {amount} {measurement_unit}\n'
+        data = shopping_cart_data(request.user)
 
         filename = 'cart.txt'
         cart_text = open(filename, 'w')
