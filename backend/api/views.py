@@ -10,7 +10,6 @@ from djoser.compat import get_user_email
 from djoser.conf import settings
 
 from recipes.models import (Ingredient,
-                            IngredientRecipe,
                             FavoriteRecipe,
                             User,
                             Recipe,
@@ -44,7 +43,9 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    @action(url_path="me", permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(url_path="me",
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def me(self, request):
         serializer = self.get_serializer(request.user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -57,7 +58,10 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = SubscriptionUserSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @action(["post"], url_path="set_password", permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(["post"],
+            url_path="set_password",
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def set_password(self, request, *args, **kwargs):
         request.data["current_user"] = request.user
         serializer = SetPasswordSerializer(data=request.data)
@@ -69,7 +73,8 @@ class UserViewSet(viewsets.ModelViewSet):
         if settings.PASSWORD_CHANGED_EMAIL_CONFIRMATION:
             context = {"user": self.request.user}
             to = [get_user_email(self.request.user)]
-            settings.EMAIL.password_changed_confirmation(self.request, context).send(to)
+            settings.EMAIL.password_changed_confirmation(self.request,
+                                                         context).send(to)
 
         if settings.LOGOUT_ON_PASSWORD_CHANGE:
             utils.logout_user(self.request)
@@ -94,7 +99,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
@@ -116,7 +122,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         cart_text = open(filename, 'w')
         cart_text.write(data)
 
-        response = HttpResponse(data, content_type='text/plain; charset=UTF-8')
+        response = HttpResponse(data,
+                                content_type='text/plain; charset=UTF-8')
         response['Content-Disposition'] = 'attachment; filename=' + filename
         return response
 
@@ -129,14 +136,21 @@ class SubscribeViewSet(CreateDeleteViewSet):
         follow = get_object_or_404(User, id=follow_id)
         serializer.save(user=self.request.user, following=follow)
 
-    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(methods=['delete'],
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def delete(self, request, *args, **kwargs):
         follow_id = self.kwargs.get("user_id")
         follow = get_object_or_404(User, id=follow_id)
 
-        queryset = Subscribe.objects.filter(user=self.request.user, following=follow)
+        queryset = Subscribe.objects.filter(user=self.request.user,
+                                            following=follow)
         if not queryset:
-            return Response({"message": "Ошибка отписки, возможно вы на этого автора и небыли подписаны"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Ошибка отписки, возможно "
+                            "вы на этого автора и небыли подписаны"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -151,14 +165,21 @@ class RecipeFavoriteViewSet(CreateDeleteViewSet):
         recipe = get_object_or_404(Recipe, id=recipe_id)
         serializer.save(user=self.request.user, recipe=recipe)
 
-    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(methods=['delete'],
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def delete(self, request, *args, **kwargs):
         recipe_id = self.kwargs.get("recipe_id")
         recipe = get_object_or_404(Recipe, id=recipe_id)
 
-        queryset = FavoriteRecipe.objects.filter(user=self.request.user, recipe=recipe)
+        queryset = FavoriteRecipe.objects.filter(user=self.request.user,
+                                                 recipe=recipe)
         if not queryset:
-            return Response({"message": "Ошибка удаления рецепта из избранного, возможно рецепта и не было в избранном"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Ошибка удаления рецепта из избранного, "
+                            "возможно рецепта и не было в избранном"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -173,13 +194,22 @@ class RecipeShoppingCartViewSet(CreateDeleteViewSet):
         recipe = get_object_or_404(Recipe, id=recipe_id)
         serializer.save(user=self.request.user, recipe=recipe)
 
-    @action(methods=['delete'], permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(methods=['delete'],
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def delete(self, request, *args, **kwargs):
         recipe_id = self.kwargs.get("recipe_id")
         recipe = get_object_or_404(Recipe, id=recipe_id)
 
-        queryset = ShoppingCartRecipe.objects.filter(user=self.request.user, recipe=recipe)
+        queryset = ShoppingCartRecipe.objects.filter(
+            user=self.request.user,
+            recipe=recipe
+        )
         if not queryset:
-            return Response({"message": "Ошибка удаления рецепта из корзины, возможно рецепта и не было в корзине"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Ошибка удаления рецепта из корзины, "
+                            "возможно рецепта и не было в корзине"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -128,6 +127,3 @@ DJOSER = {
         'current_user': 'api.serializers.UserSerializer',
     }
 }
-
-
-

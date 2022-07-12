@@ -17,7 +17,9 @@ def shopping_cart_data(user):
         ingredients = IngredientRecipe.objects.filter(recipe=recipe)
         for ingredient in ingredients:
             ingredient_dict[
-                f'{ingredient.ingredient.name}, {ingredient.ingredient.measurement_unit}'] += ingredient.amount
+                (f'{ingredient.ingredient.name}, '
+                 f'{ingredient.ingredient.measurement_unit}')
+            ] += ingredient.amount
 
     data = (f'Ваши рецепты: {", ".join(list(recipes_name))}\n'
             f'Необходимые ингредиенты для всех рецептов:\n')

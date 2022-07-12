@@ -22,15 +22,13 @@ class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
-        fields = (
-                "email",
-                "id",
-                "username",
-                "first_name",
-                "last_name",
-                "password",
-                "is_subscribed"
-            )
+        fields = ("email",
+                  "id",
+                  "username",
+                  "first_name",
+                  "last_name",
+                  "password",
+                  "is_subscribed")
         model = User
 
     def get_is_subscribed(self, obj):
@@ -39,7 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=request_user, following=obj).exists()
+        return Subscribe.objects.filter(user=request_user,
+                                        following=obj).exists()
 
     def create(self, validated_data):
         """создание хэшируемого пароля"""
@@ -57,7 +56,9 @@ class PasswordSerializer(serializers.Serializer):
         try:
             validate_password(attrs["new_password"], user)
         except django_exceptions.ValidationError as e:
-            raise serializers.ValidationError({"new_password": list(e.messages)})
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)}
+            )
         return super().validate(attrs)
 
 
@@ -69,7 +70,9 @@ class CurrentPasswordSerializer(serializers.Serializer):
     }
 
     def validate_current_password(self, value):
-        is_password_valid = self.initial_data["current_user"].check_password(value)
+        is_password_valid = (
+            self.initial_data["current_user"].check_password(value)
+        )
         if is_password_valid:
             return value
         self.fail("invalid_password")
@@ -135,7 +138,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        return FavoriteRecipe.objects.filter(user=request_user, recipe=obj).exists()
+        return FavoriteRecipe.objects.filter(
+            user=request_user,
+            recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """возвращает в поле is_in_shopping_cart True если текущий пользователь
@@ -143,7 +148,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         request_user = self.context["request"].user
         if request_user.is_anonymous:
             return False
-        return ShoppingCartRecipe.objects.filter(user=request_user, recipe=obj).exists()
+        return ShoppingCartRecipe.objects.filter(
+            user=request_user,
+            recipe=obj).exists()
 
 
 class IngredientJSONField(serializers.Field):
@@ -158,8 +165,13 @@ class IngredientJSONField(serializers.Field):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, source='tag', required=False)
-    ingredients = IngredientJSONField(required=False, source='ingredient')
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        source='tag',
+        required=False
+    )
+    ingredients = IngredientJSONField(required=True, source='ingredient')
     image = Base64ImageField(required=False)
 
     class Meta:
@@ -189,12 +201,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
 
         recipe = Recipe.objects.create(**validated_data)
-        TagRecipe.objects.bulk_create([TagRecipe(tag=tag, recipe=recipe) for tag in tags])
+        TagRecipe.objects.bulk_create(
+            [TagRecipe(tag=tag, recipe=recipe) for tag in tags]
+        )
         IngredientRecipe.objects.bulk_create(
             [
                 IngredientRecipe(
                     recipe=recipe,
-                    ingredient=get_object_or_404(Ingredient, id=ingredient['id']),
+                    ingredient=get_object_or_404(Ingredient,
+                                                 id=ingredient['id']),
                     amount=ingredient['amount']
                 ) for ingredient in ingredients
             ]
@@ -215,22 +230,21 @@ class RecipeSubscribeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionUserSerializer(serializers.ModelSerializer):
-    """сериализатор для вывода юзеров на которых подписан текущий пользователь"""
+    """сериализатор для вывода юзеров
+    на которых подписан текущий пользователь"""
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(source='recipes.count')
     recipes = RecipeSubscribeSerializer(many=True)
 
     class Meta:
-        fields = (
-                "email",
-                "id",
-                "username",
-                "first_name",
-                "last_name",
-                "is_subscribed",
-                "recipes",
-                "recipes_count"
-            )
+        fields = ("email",
+                  "id",
+                  "username",
+                  "first_name",
+                  "last_name",
+                  "is_subscribed",
+                  "recipes",
+                  "recipes_count")
         model = User
 
     def get_is_subscribed(self, obj):
@@ -252,15 +266,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
         follow = get_object_or_404(User, id=follow_id)
 
         if (self.context["request"].method == "POST"
-                 and Subscribe.objects.filter(user=user, following=follow).exists()):
-             raise serializers.ValidationError(
-                 {"message": "Вы уже подписаны на этого пользователя"}
-             )
+                and Subscribe.objects.filter(user=user,
+                                             following=follow).exists()):
+            raise serializers.ValidationError(
+                {"message": "Вы уже подписаны на этого пользователя"}
+            )
 
         if self.context["request"].method == "POST" and user == follow:
-             raise serializers.ValidationError(
-                 {"message": "На самого себя нельзя подписаться"}
-             )
+            raise serializers.ValidationError(
+                {"message": "На самого себя нельзя подписаться"}
+            )
         return data
 
 
@@ -279,10 +294,12 @@ class RecipeFavoriteSerializer(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=recipe_id)
 
         if (self.context["request"].method == "POST"
-                 and FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists()):
-             raise serializers.ValidationError(
-                 {"message": "Вы уже добавили этот рецепт в избранное"}
-             )
+                and FavoriteRecipe.objects.filter(
+                    user=user,
+                    recipe=recipe).exists()):
+            raise serializers.ValidationError(
+                {"message": "Вы уже добавили этот рецепт в избранное"}
+            )
 
         return data
 
@@ -302,12 +319,11 @@ class RecipeShoppingCartSerializer(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=recipe_id)
 
         if (self.context["request"].method == "POST"
-                 and ShoppingCartRecipe.objects.filter(user=user, recipe=recipe).exists()):
-             raise serializers.ValidationError(
-                 {"message": "Вы уже добавили этот рецепт в корзину"}
-             )
+                and ShoppingCartRecipe.objects.filter(
+                    user=user,
+                    recipe=recipe).exists()):
+            raise serializers.ValidationError(
+                {"message": "Вы уже добавили этот рецепт в корзину"}
+            )
 
         return data
-
-
-
