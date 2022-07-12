@@ -185,22 +185,22 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         model = Recipe
 
-    def create(self, validated_data):
+    def create(self, data):
         try:
-            tags = validated_data.pop('tag')
+            tags = data.pop('tag')
         except:
             raise serializers.ValidationError(
                 {"message": "Назначьте тэги для рецепта"}
             )
 
         try:
-            ingredients = validated_data.pop('ingredient')
+            ingredients = data.pop('ingredient')
         except:
             raise serializers.ValidationError(
                 {"message": "Добавьте ингредиенты для нового рецепта"}
             )
 
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(**data)
         TagRecipe.objects.bulk_create(
             [TagRecipe(tag=tag, recipe=recipe) for tag in tags]
         )
@@ -215,6 +215,38 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ]
         )
         return recipe
+
+    def update(self, instance, data):
+        instance.image = data.get('image', instance.image)
+        instance.name = data.get('name', instance.name)
+        instance.text = data.get('text', instance.text)
+        instance.cooking_time = data.get('cooking_time', instance.cooking_time)
+        instance.save()
+
+        """удаление страых тэгов и рецептов"""
+        TagRecipe.objects.filter(recipe=instance).delete()
+        IngredientRecipe.objects.filter(recipe=instance).delete()
+
+        """получение новых тэгов и рецептов и сохранение 
+        их для измененного рецепта"""
+        ingredients = data.get('ingredient')
+        tags = data.get('tag')
+
+        TagRecipe.objects.bulk_create(
+            [TagRecipe(tag=tag, recipe=instance) for tag in tags]
+        )
+        IngredientRecipe.objects.bulk_create(
+            [
+                IngredientRecipe(
+                    recipe=instance,
+                    ingredient=get_object_or_404(Ingredient,
+                                                 id=ingredient['id']),
+                    amount=ingredient['amount']
+                ) for ingredient in ingredients
+            ]
+        )
+
+        return instance
 
 
 class RecipeSubscribeSerializer(serializers.ModelSerializer):
