@@ -134,3 +134,4 @@ dmypy.json
 /temp.py
 /backend/cart.txt
 /help_file/
+/backend/.env

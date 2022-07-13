@@ -127,3 +127,10 @@ DJOSER = {
         'current_user': 'api.serializers.UserSerializer',
     }
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://*localhost',
+    'https://*localhost',
+    'http://*127.0.0.1',
+    'https://*127.0.0.1',
+]
