@@ -155,10 +155,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class IngredientJSONField(serializers.Field):
     def to_representation(self, value):
-        ingredients = value.all()
-        for ingredient in ingredients:
-            pass
-        return {"Ингредиенты": "Пусто!"}
+        return value.all().values("id")
 
     def to_internal_value(self, data):
         return data
@@ -185,6 +182,20 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         model = Recipe
 
+    def list_for_tags(self, recipe, tags):
+        """возвращает список тэгов для создания или
+        обновления рецепта"""
+        return [TagRecipe(tag=tag, recipe=recipe) for tag in tags]
+
+    def list_for_ingredients(self, recipe, ingredients):
+        """возвращает список ингредиентов для создания или
+        обновления рецепта"""
+        return [IngredientRecipe(
+            recipe=recipe,
+            ingredient=get_object_or_404(Ingredient, id=ingredient['id']),
+            amount=ingredient['amount']
+        ) for ingredient in ingredients]
+
     def create(self, data):
         try:
             tags = data.pop('tag')
@@ -201,18 +212,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
 
         recipe = Recipe.objects.create(**data)
-        TagRecipe.objects.bulk_create(
-            [TagRecipe(tag=tag, recipe=recipe) for tag in tags]
-        )
+        TagRecipe.objects.bulk_create(self.list_for_tags(recipe, tags))
         IngredientRecipe.objects.bulk_create(
-            [
-                IngredientRecipe(
-                    recipe=recipe,
-                    ingredient=get_object_or_404(Ingredient,
-                                                 id=ingredient['id']),
-                    amount=ingredient['amount']
-                ) for ingredient in ingredients
-            ]
+            self.list_for_ingredients(recipe, ingredients)
         )
         return recipe
 
@@ -232,20 +234,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients = data.get('ingredient')
         tags = data.get('tag')
 
-        TagRecipe.objects.bulk_create(
-            [TagRecipe(tag=tag, recipe=instance) for tag in tags]
-        )
+        TagRecipe.objects.bulk_create(self.list_for_tags(instance, tags))
         IngredientRecipe.objects.bulk_create(
-            [
-                IngredientRecipe(
-                    recipe=instance,
-                    ingredient=get_object_or_404(Ingredient,
-                                                 id=ingredient['id']),
-                    amount=ingredient['amount']
-                ) for ingredient in ingredients
-            ]
+            self.list_for_ingredients(instance, ingredients)
         )
-
         return instance
 
 
