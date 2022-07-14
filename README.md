@@ -1,5 +1,14 @@
 # FOODGRAMM
 
+## Адреса сайта:
+- http://51.250.109.6/
+- http://51.250.109.6/admin/
+- http://51.250.109.6/api/docs/ 
+
+
+- http://frozenfish.ddnsking.com/
+- http://frozenfish.ddnsking.com/admin/
+- http://frozenfish.ddnsking.com/api/docs/
 
 ### Приложения бэкенда:
 - recipes - описание моделей
