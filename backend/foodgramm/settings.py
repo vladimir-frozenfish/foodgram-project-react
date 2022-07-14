@@ -8,13 +8,14 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "*",
     "localhost",
     "127.0.0.1",
-    "51.250.109.6"
+    "51.250.109.6",
+    "frozenfish.ddnsking.com"
 ]
 
 INSTALLED_APPS = [
@@ -129,8 +130,12 @@ DJOSER = {
 }
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://*localhost',
-    'https://*localhost',
-    'http://*127.0.0.1',
-    'https://*127.0.0.1',
+    "http://*localhost",
+    "https://*localhost",
+    "http://*127.0.0.1",
+    "https://*127.0.0.1",
+    "http://*frozenfish.ddnsking.com",
+    "https://*frozenfish.ddnsking.com",
+    "http://*51.250.109.6",
+    "https://*51.250.109.6"
 ]
