@@ -100,7 +100,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, source='tag', required=False)
     ingredients = serializers.SerializerMethodField()
-    is_favorite = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
@@ -109,7 +109,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             "tags",
             "author",
             "ingredients",
-            "is_favorite",
+            "is_favorited",
             "is_in_shopping_cart",
             "name",
             "image",
@@ -132,7 +132,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         return ingredient_list
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         """возвращает в поле is_vaforite True если текущий пользователь
         отметил рецепт в избранное"""
         request_user = self.context["request"].user

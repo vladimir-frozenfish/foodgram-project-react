@@ -1,7 +1,7 @@
 from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, status, mixins
+from rest_framework import filters, viewsets, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,8 +27,9 @@ from .serializers import (IngredientSerializer,
                           SubscribeSerializer,
                           SubscriptionUserSerializer)
 from .permissions import IsUserOrReadAndCreate, IsAuthorOrReadOnly
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .utils import shopping_cart_data
+from .pagination import CustomPagination
 
 
 class CreateDeleteViewSet(mixins.CreateModelMixin,
@@ -42,6 +43,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsUserOrReadAndCreate]
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = CustomPagination
 
     @action(url_path="me",
             permission_classes=(permissions.IsAuthenticated,),
@@ -93,6 +95,9 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter,]
+    filterset_class = IngredientFilter
+    search_fields = ('^name',)
     pagination_class = None
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
@@ -101,6 +106,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 

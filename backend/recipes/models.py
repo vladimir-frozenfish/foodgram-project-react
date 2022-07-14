@@ -218,7 +218,8 @@ class Subscribe(models.Model):
 
 
 class FavoriteRecipe(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
+                               related_name="favorite")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
@@ -238,7 +239,8 @@ class FavoriteRecipe(models.Model):
 
 
 class ShoppingCartRecipe(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
+                               related_name="cart")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
