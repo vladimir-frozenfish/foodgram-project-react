@@ -2,7 +2,7 @@
 
 ## Адреса сайта:
 - http://51.250.109.6/
-- http://51.250.109.6/admin/
+- http://51.250.109.6/admin/ (login: admin; password: 12345)
 - http://51.250.109.6/api/docs/ 
 
 
