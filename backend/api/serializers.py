@@ -153,11 +153,36 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe=obj).exists()
 
 
+# class IngredientAmountSerializers(serializers.Serializer):
+#      id = serializers.CharField()
+#      amount = serializers.CharField()
+
+
 class IngredientJSONField(serializers.Field):
     def to_representation(self, value):
         return value.all().values("id")
 
     def to_internal_value(self, data):
+        # raise serializers.ValidationError({"message": "Количество должно быть больше нуля"})      # здесь не работает в react
+
+        # ingr_id = []
+        #     ingrs = data
+        #
+        #     for ingr in ingrs:
+        #         # ingr_id.append(ingr["id"])
+        #
+        #         if int(ingr["amount"]) <= 0:
+        #             continue
+        #             # raise serializers.ValidationError(
+        #             #     {"message": "Количество должно быть больше нуля"}
+        #             # )
+
+        # """проверка, чтобы не было двух или более одинаковых элементов"""
+        # if len(ingredients_id) != len(set(ingredients_id)):
+        #     raise serializers.ValidationError(
+        #         {"message": "Одинаковых ингредиентов не должно быть"}
+        #     )
+
         return data
 
 
@@ -168,6 +193,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         source='tag',
         required=False
     )
+    # ingredients = IngredientAmountSerializers(required=True, source='ingredient', many=True)
     ingredients = IngredientJSONField(required=True, source='ingredient')
     image = Base64ImageField(required=False)
 
@@ -196,6 +222,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             amount=ingredient['amount']
         ) for ingredient in ingredients]
 
+    def chek_ingredients(self, ingredients):
+        """функция проверяет введенные ингредиенты на дублирование
+        и количество должно быть больше нуля
+        Функция так названа, так как на фронтенде React если функцию назвать
+        validate_ingredients - не работает"""
+        ingredients_id = []
+
+        for ingredient in ingredients:
+            ingredients_id.append(ingredient["id"])
+
+            if not ingredient["amount"].isnumeric() or int(ingredient["amount"]) <= 0:
+                raise serializers.ValidationError(
+                    {"message": "Количество должно быть числом больше нуля"}
+                )
+        """проверка, чтобы не было двух или более одинаковых элементов"""
+        if len(ingredients_id) != len(set(ingredients_id)):
+            raise serializers.ValidationError(
+                {"message": "Одинаковых ингредиентов не должно быть"}
+            )
+
     def create(self, data):
         try:
             tags = data.pop('tag')
@@ -210,6 +256,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"message": "Добавьте ингредиенты для нового рецепта"}
             )
+
+        self.chek_ingredients(ingredients)
 
         recipe = Recipe.objects.create(**data)
         TagRecipe.objects.bulk_create(self.list_for_tags(recipe, tags))
